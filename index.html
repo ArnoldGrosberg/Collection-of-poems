@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+    <!-- CSS only -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet"
+          integrity="sha384-1BmE4kWBq78iYhFldvKuhfTAU6auU8tT94WrHftjDbrCEXSU1oBoqyl2QvZ6jIW3" crossorigin="anonymous">
+</head>
+<body>
+<div id="app">
+</div>
+<script src="https://unpkg.com/vue@3.2.31/dist/vue.global.prod.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.min.js"
+        integrity="sha384-QJHtvGhmr9XOIpI6YVutG+2QOK9T+ZnN4kzFN1RtK3zEFEIsxhlmWl5/YESvpZ13"
+        crossorigin="anonymous"></script>
+<script>
+    function tryToParseJSON(jsonString) {
+        try {
+            let o = JSON.parse(jsonString);
+            if (o && typeof o === "object") {
+                return o;
+            }
+        } catch (e) {
+        }
+        return '';
+    }
+
+    const vue = Vue.createApp({
+        data() {
+            return {}
+        },
+        async created() {
+        },
+        methods: {
+            send: function (method, url, body) {
+                async function CheckError(response) {
+                    if (response.status >= 200 && response.status <= 299) {
+                        let responseText = await response.text()
+                        return {ok: true, status: response.status, body: tryToParseJSON(responseText)}
+                    } else {
+                        let responseText = await response.text()
+                        let responseObject = tryToParseJSON(responseText)
+                        if (typeof responseObject === 'object' && typeof responseObject.error === 'string') {
+                            alert('Error code ' + response.status + ":\n" + responseObject.error)
+                        } else {
+                            alert('Error code ' + response.status + ":\n" + responseText)
+                        }
+                        return {ok: false, status: response.status, body: responseObject || responseText}
+                    }
+                }
+
+                const headers = {
+                    'Content-Type': 'application/json'
+                };
+                return fetch(url, {
+                    method: method,
+                    headers,
+                    body: JSON.stringify(body)
+                })
+                    .then(CheckError)
+                    .then((jsonResponse) => {
+                        return jsonResponse
+                    }).catch((error) => {
+                        throw Error('Network error: ' + error);
+                    });
+            }
+        },
+    }).mount('#app')
+</script>
+</body>
+</html>

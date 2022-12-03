@@ -1,0 +1,54 @@
+{
+  "openapi": "3.0.2",
+  "info": {
+    "title": "Collection of poems",
+    "version": "1.0.0"
+  },
+  "servers": [
+    {
+      "url": "http://localhost:4000/",
+      "description": ""
+    }
+  ],
+  "paths": {
+    "/": {
+      "get": {
+        "tags": [
+          "/"
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "text/xml": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "description": "Successful response - returns html of the frontend."
+          }
+        },
+        "operationId": "getFrontend",
+        "summary": "Display the frontend",
+        "description": "Displays the frontend\n"
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "error": {
+        "title": "Root Type for error",
+        "description": "",
+        "type": "object",
+        "properties": {
+          "error": {
+            "type": "string"
+          }
+        },
+        "example": {
+          "error": "string"
+        }
+      }
+    }
+  }
+}
