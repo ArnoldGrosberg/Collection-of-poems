@@ -11,6 +11,33 @@
     }
   ],
   "paths": {
+    "/poems": {
+      "summary": "Path used to manage the list of poems.",
+      "description": "The REST endpoint/path used to list and create zero or more `poem` entities.  This path contains a `GET` operation to perform the list, respectively.",
+      "get": {
+        "tags": [
+          "/poems"
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/poem"
+                  }
+                }
+              }
+            },
+            "description": "Successful response - returns an array of `poem` entities."
+          }
+        },
+        "operationId": "getPoems",
+        "summary": "List all poems",
+        "description": "Gets a list of all `poem` entities."
+      }
+    },
     "/": {
       "get": {
         "tags": [
@@ -36,6 +63,42 @@
   },
   "components": {
     "schemas": {
+      "poem": {
+        "title": "Root Type for poem",
+        "description": "",
+        "type": "object",
+        "properties": {
+          "id": {
+            "format": "int32",
+            "type": "integer"
+          },
+          "title": {
+            "type": "string"
+          },
+          "content": {
+            "type": "string"
+          },
+          "likeCount": {
+            "format": "int32",
+            "type": "string"
+          },
+          "entryDate": {
+            "format": "date",
+            "type": "string"
+          },
+          "addedBy": {
+            "type": "string"
+          }
+        },
+        "example": {
+          "id": 1,
+          "title": "The Raven",
+          "content": "Once upon a midnight dreary, while I pondered, weak and weary, Over many a quaint and curious volume of forgotten lore, While I nodded, nearly napping, suddenly there came a tapping, As of some one gently rapping, rapping at my chamber door.“’Tis some visitor,” I muttered, “tapping at my chamber door — Only this and nothing more.”",
+          "likeCount": 60,
+          "entryDate": "2018-12-04",
+          "addedBy": "Edgar Allan Poe"
+        }
+      },
       "error": {
         "title": "Root Type for error",
         "description": "",

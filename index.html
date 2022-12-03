@@ -12,6 +12,23 @@
 </head>
 <body>
 <div id="app">
+    <h1>Poems</h1>
+    <table id="poemsTable" class="table table-striped table-bordered">
+        <tr>
+            <th>Title</th>
+            <th>Content</th>
+            <th>Like count</th>
+            <th>Entry date</th>
+            <th>Added by</th>
+        </tr>
+        <tr v-for="poem in poems">
+            <td>{{ poem.title }}</td>
+            <td>{{ poem.content }}</td>
+            <td>{{ poem.likeCount }}</td>
+            <td>{{ poem.entryDate }}</td>
+            <td>{{ poem.addedBy }}</td>
+        </tr>
+    </table>
 </div>
 <script src="https://unpkg.com/vue@3.2.31/dist/vue.global.prod.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.min.js"
@@ -31,9 +48,24 @@
 
     const vue = Vue.createApp({
         data() {
-            return {}
+            return {
+                poems: [],
+                activePoemId: null,
+                title: null,
+                content: null,
+                likeCount: null,
+                entryDate: null,
+                addedBy: null,
+            }
         },
         async created() {
+            let response;
+            try {
+                response = await this.send('GET', 'http://localhost:4000/poems');
+            } catch (e) {
+                alert("Network error")
+            }
+            this.poems = response.body;
         },
         methods: {
             send: function (method, url, body) {
