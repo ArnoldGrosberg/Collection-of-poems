@@ -14,6 +14,98 @@ app.use(cors())
 // Populate req.body
 app.use(express.json())
 
+// Store user data
+let loggedInUser;
+app.use(function (req, res, next) {
+    let sessionId = getSessionId(req)
+    if (sessionId) {
+        const sessionUser = sessions.find((session) => session.id === parseInt(sessionId));
+        if (sessionUser) {
+            loggedInUser = users.findById(sessionUser.userId);
+            loggedInUser.sessionId = sessionUser.id;
+        }
+    } else {
+        loggedInUser = {};
+    }
+    loggedInUser.userIp = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
+    next();
+});
+
+// Hardcoded list of users
+const users = [{id: 1, username: "Admin", password: "Password"}, {
+    id: 2, username: "User", password: "Password"
+}]
+
+// Hardcoded list of sessions
+let sessions = [{id: 1, userId: 1}, {id: 2, userId: 2}]
+
+function createUser(user) {
+
+    user.id = users.length + 1;
+    users.push(user)
+    return user;
+}
+
+function createSession(userId) {
+
+    // Find max id from sessions using reduce
+    let newSession = {
+        id: sessions.reduce((max, p) => p.id > max ? p.id : max, 0) + 1, userId
+    }
+    sessions.push(newSession)
+    return newSession
+}
+
+function login(user, req) {
+    const session = createSession(user.id);
+    loggedInUser = {...user, sessionId: session.id, userIp: req.headers['x-forwarded-for'] || req.socket.remoteAddress};
+}
+
+function getSessionId(req) {
+
+    const authorization = req.headers.authorization;
+    if (!authorization) return null;
+    const parts = authorization.split(' ');
+    if (parts.length !== 2) return null;
+    const scheme = parts[0];
+    const credentials = parts[1];
+    if (/^Bearer$/i.test(scheme)) {
+        return credentials;
+    }
+    return null;
+}
+
+Array.prototype.findById = function (value) {
+
+    return this.findBy('id', parseInt(value))
+}
+
+Array.prototype.findBy = function (field, value) {
+
+    return this.find(function (x) {
+        return x[field] === value;
+    })
+}
+
+function requireLogin(req, res, next) {
+
+    if (!loggedInUser.sessionId) {
+        return res.status(401).send({error: 'You have to login'})
+    }
+
+    const sessionUser = sessions.find((session) => session.id === parseInt(loggedInUser.sessionId));
+    if (!sessionUser) return res.status(401).json({error: 'Invalid token'});
+
+    // Check that the sessionId in the sessions has user in it
+    const user = users.findById(sessionUser.userId);
+    if (!user) {
+        return res.status(404).send({error: 'SessionId does not have an user associated with it'})
+    }
+
+    req.sessionId = sessionUser.id
+    next()
+}
+
 // Hardcoded list of poems
 let poems = [{
     id: 1,
@@ -47,6 +139,48 @@ let poems = [{
 
 app.get('/poems', (req, res) => {
     res.send(poems)
+})
+
+app.post('/users', (req, res) => {
+
+    if (!req.body.username || !req.body.password) {
+        return res.status(400).send({error: 'One or all params are missing'})
+    }
+
+    let user = users.findBy('username', req.body.username);
+    if (user) {
+        return res.status(409).send({error: 'Conflict: The user already exists. '})
+    }
+
+    user = createUser({
+        username: req.body.username, password: req.body.password
+    });
+
+    login(user, req)
+    res.status(201).send({sessionId: loggedInUser.sessionId})
+})
+
+app.post('/sessions', (req, res) => {
+
+    if (!req.body.username || !req.body.password) {
+        return res.status(400).send({error: 'One or all params are missing'})
+    }
+
+    const user = users.find((user) => user.username === req.body.username && user.password === req.body.password);
+    if (!user) {
+        return res.status(401).send({error: 'Unauthorized: username or password is incorrect'})
+    }
+
+    login(user, req)
+    res.status(201).send({
+        sessionId: loggedInUser.sessionId
+    })
+})
+
+app.delete('/sessions', requireLogin, (req, res) => {
+
+    sessions = sessions.filter((session) => session.id !== req.sessionId);
+    res.status(204).end()
 })
 
 // Serve the frontend
