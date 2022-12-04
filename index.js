@@ -141,6 +141,85 @@ app.get('/poems', (req, res) => {
     res.send(poems)
 })
 
+function getPoem(req) {
+    return poems.findById(req.params.id);
+}
+
+app.get('/poem/:id', (req, res) => {
+
+    let poem = getPoem(req);
+    if (!poem) {
+        return res.status(404).send({error: "Poem not found"})
+    }
+
+    res.status(200).send(poem)
+})
+
+app.post('/poems', requireLogin, (req, res) => {
+
+    if (!req.body.title || !req.body.content) {
+        return res.status(400).send({error: 'One or all params are missing'})
+    }
+
+    // Find max id from poems using map and Math.max
+    const ids = poems.map(object => {
+        return object.id;
+    });
+    const maxPoemId = Math.max(...ids);
+
+    // Create a new poem with the given title and content
+    let newPoem = {
+        id: maxPoemId + 1,
+        title: req.body.title,
+        content: req.body.content,
+        likeCount: 0,
+        entryDate: new Date().toISOString().split('T')[0],
+        addedBy: loggedInUser.username
+    }
+
+    // Push the new poem to the poems list
+    poems.push(newPoem)
+
+    res.status(201).send(newPoem)
+})
+
+app.patch('/poems/:id', requireLogin, (req, res) => {
+
+    const poem = poems.find(p => p.id === parseInt(req.params.id))
+    if (!poem) return res.status(404).send({error: 'Poem not found'})
+
+    if (req.body.title) poem.title = req.body.title
+    if (req.body.content) poem.content = req.body.content
+    if (req.body.title || req.body.content) poem.entryDate = new Date().toISOString().split('T')[0]
+
+
+    res.status(200).send(poem)
+})
+
+app.delete('/poems/:id', requireLogin, (req, res) => {
+
+    // Check that :id is a valid number
+    if ((Number.isInteger(req.params.id) && req.params.id > 0)) {
+        return res.status(400).send({error: 'Invalid id'})
+    }
+    let poem = poems.findById(req.params.id)
+
+    // Check that Poem with given id exists
+    if (!poem) {
+        return res.status(404).send({error: 'Poem not found'})
+    }
+
+    // Check that Poem has been added by the logged in user
+    if (poem.addedBy !== loggedInUser.username) {
+        return res.status(403).send({error: 'You are not allowed to delete this poem'})
+    }
+
+    // delete the poem from the poems list
+    poems = poems.filter((poem) => poem.id !== parseInt(req.params.id));
+
+    res.status(204).end()
+})
+
 app.post('/users', (req, res) => {
 
     if (!req.body.username || !req.body.password) {

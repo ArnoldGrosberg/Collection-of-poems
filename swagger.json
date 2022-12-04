@@ -38,6 +38,108 @@
         "description": "Gets a list of all `poem` entities."
       }
     },
+    "/poems/{poemId}": {
+      "summary": "Path used to manage a single poem.",
+      "description": "The REST endpoint/path used to get, update, and delete single instances of an `poem`.  This path contains `GET`, `PATCH`, and `DELETE` operations used to perform the get, update, and delete tasks, respectively.",
+      "get": {
+        "tags": [
+          "/poems"
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/poem"
+                }
+              }
+            },
+            "description": "Successful response - returns a single `poem`."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/poem"
+                }
+              }
+            },
+            "description": "Poem not found"
+          }
+        },
+        "operationId": "getPoem",
+        "summary": "Get a poem",
+        "description": "Gets the details of a single instance of a `poem`."
+      },
+      "delete": {
+        "tags": [
+          "/poems"
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful response."
+          },
+          "400": {
+            "description": "One or all params are missing"
+          },
+          "404": {
+            "description": "Poem not found"
+          }
+        },
+        "operationId": "deletePoem",
+        "summary": "Delete a poem",
+        "description": "Deletes an existing `poem`."
+      },
+      "patch": {
+        "requestBody": {
+          "description": "Edits `poem`",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/poem"
+              }
+            }
+          },
+          "required": true
+        },
+        "tags": [
+          "/poems"
+        ],
+        "responses": {
+          "201": {
+            "description": "Successful response."
+          },
+          "400": {
+            "description": "One or all params are missing"
+          },
+          "401": {
+            "description": "You have to login"
+          },
+          "404": {
+            "description": "Poem not found"
+          }
+        },
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
+        "operationId": "editPoem",
+        "summary": "Edit a poem",
+        "description": "Edits an instance of a `poem`."
+      },
+      "parameters": [
+        {
+          "name": "poemId",
+          "description": "A unique identifier for a `poem`.",
+          "schema": {
+            "type": "string"
+          },
+          "in": "path",
+          "required": true
+        }
+      ]
+    },
     "/sessions": {
       "post": {
         "requestBody": {
